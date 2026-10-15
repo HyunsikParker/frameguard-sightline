@@ -1,0 +1,72 @@
+{
+ "note": "Captions use 'text'; the synthetic narrator reads 'say' when given. {placeholders} come from the recorded job (demo/build/app/job.json).",
+ "scenes": [
+  {"id": "title", "visual": "slide:title", "lead": 1.2, "lines": [
+   {"text": "FrameGuard Sightline checks rendered and exported video for the frames that slip through review."},
+   {"text": "It uses OpenCV 5 for the analysis and runs on AWS.", "say": "It uses OpenCV five for the analysis, and runs on A W S."}
+  ]},
+  {"id": "problem", "visual": "slide:problem", "lines": [
+   {"text": "A delivered video can still contain a black frame, a stalled run of identical frames, one stray frame from another shot, a frame with block damage, or dropped frames."},
+   {"text": "Each fault lasts a fraction of a second. A tired reviewer misses it, and checking again costs another full viewing."}
+  ]},
+  {"id": "approach", "visual": "slide:approach", "lines": [
+   {"text": "Sightline gives small studios, animation teams and media labs a first pass they can check."},
+   {"text": "OpenCV 5 measures every frame, and an agent re-checks each suspicion with the test that fits it.", "say": "OpenCV five measures every frame, and an agent re-checks each suspicion with the test that fits it."},
+   {"text": "A person decides what happens to the footage, and the agent then verifies the result."}
+  ]},
+  {"id": "app_upload", "visual": "app:page>upload", "lines": [
+   {"text": "This is the review page, served by API Gateway and Lambda.", "say": "This is the review page, served by A P I Gateway and Lambda."},
+   {"text": "The reviewer uploads a test clip: the 52-second Sintel trailer with five defects seeded inside moving shots.", "say": "The reviewer uploads a test clip: the fifty-two-second Sintel trailer, with five defects seeded inside moving shots."}
+  ]},
+  {"id": "app_scan", "visual": "app:upload>awaiting", "timelapse": true, "lines": [
+   {"text": "The browser sends the file straight to a private S3 bucket with a presigned form, and Step Functions starts the job.", "say": "The browser sends the file straight to a private S three bucket with a presigned form, and Step Functions starts the job."},
+   {"text": "On a Graviton Lambda, OpenCV 5 decodes each frame once and measures brightness, a perceptual hash, colour histograms, edge density, the block grid and optical flow.", "say": "On a Graviton Lambda, OpenCV five decodes each frame once, and measures brightness, a perceptual hash, colour histograms, edge density, the block grid, and optical flow."},
+   {"text": "Detectors turn these measurements into candidates, and the agent checks each one again."}
+  ]},
+  {"id": "app_findings", "visual": "app:awaiting>trace", "lines": [
+   {"text": "After {tool_calls} follow-up checks, the agent reports {defects} defects and {needs_review_phrase} for review. It dismissed {dismissed} events, such as edits and fades, with a reason for each.", "say": "After {tool_calls_words} follow-up checks, the agent reports {defects_words} defects and {needs_review_phrase_words} for review. It dismissed {dismissed_words} events, such as edits and fades, with a reason for each."},
+   {"text": "Every finding shows the frames around it and the reason for the verdict."}
+  ]},
+  {"id": "app_trace", "visual": "app:trace>dismissed", "lines": [
+   {"text": "For this flash, a sharp change of shot started the check. The agent compared the next frames with the shot before it."},
+   {"text": "The picture returned one frame later, in colour and in layout, so it reports one foreign frame instead of two cuts."}
+  ]},
+  {"id": "app_review", "visual": "app:dismissed>approved", "lines": [
+   {"text": "Dismissed items stay listed with their reasons, so the reviewer can overrule them."},
+   {"text": "The frame skip is marked for review because its motion only partly matches the shot."},
+   {"text": "Nothing changes until the reviewer approves."}
+  ]},
+  {"id": "app_act", "visual": "app:approved>done", "timelapse": true, "lines": [
+   {"text": "Sending the decisions resumes the workflow, which has been waiting on a Step Functions task token."},
+   {"text": "The black, flash and damaged frames are patched in a preview by holding the nearest good frame of the same shot."},
+   {"text": "The stall and the skip cannot be rebuilt from an export, so they go to a re-render list."}
+  ]},
+  {"id": "app_verify", "visual": "app:done>end", "lines": [
+   {"text": "Then the agent analyses its own repair. None of the repaired ranges is flagged again."}
+  ]},
+  {"id": "architecture", "visual": "slide:architecture", "lines": [
+   {"text": "The whole stack is one CloudFormation template in a free-plan AWS account.", "say": "The whole stack is one CloudFormation template, in a free-plan A W S account."},
+   {"text": "S3 holds uploads and reports and deletes them after seven days, and DynamoDB keeps the job state.", "say": "S three holds uploads and reports and deletes them after seven days, and Dynamo D B keeps the job state."},
+   {"text": "Step Functions runs analyse, wait for a person, then act. The OpenCV Lambda runs on Graviton, the HTTP API is rate-limited, and CloudWatch records metrics without image content.", "say": "Step Functions runs: analyse, wait for a person, then act. The OpenCV Lambda runs on Graviton, the H T T P A P I is rate-limited, and CloudWatch records metrics without image content."}
+  ]},
+  {"id": "agent", "visual": "slide:agent", "lines": [
+   {"text": "The agent is a bounded controller, not a language model."},
+   {"text": "It owns five checks and a budget of 60 checks and 1,200 re-decoded frames per job.", "say": "It owns five checks, and a budget of sixty checks and twelve hundred re-decoded frames per job."},
+   {"text": "Every check is logged with its trigger, its measurements and its decision, and whatever the budget cannot cover goes to a person."}
+  ]},
+  {"id": "results", "visual": "slide:results", "lines": [
+   {"text": "Thresholds were fixed on development clips before the test sets were generated."},
+   {"text": "On 24 synthetic test clips, Sightline found 88 of 93 seeded defects with no false positives.", "say": "On twenty-four synthetic test clips, Sightline found eighty-eight of ninety-three seeded defects, with no false positives."},
+   {"text": "On real trailers with seeded defects, it found 14 of 18, with about one false positive per 1,000 frames.", "say": "On real trailers with seeded defects, it found fourteen of eighteen, with about one false positive per thousand frames."},
+   {"text": "The unmodified trailers produced no defect findings."}
+  ]},
+  {"id": "limits", "visual": "slide:limits", "lines": [
+   {"text": "Frame skips are the weakest class on real footage: one of three was found."},
+   {"text": "A dark flash is reported as a black frame, and repairs are previews, not re-renders."},
+   {"text": "Sightline inspects picture integrity only. It does not detect or identify people, and uploads expire after seven days."}
+  ]},
+  {"id": "end", "visual": "slide:end", "tail": 3.0, "lines": [
+   {"text": "The code, the technical report and the evaluation are linked from the submission."}
+  ]}
+ ]
+}

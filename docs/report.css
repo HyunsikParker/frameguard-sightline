@@ -1,0 +1,15 @@
+@page { size: A4; margin: 18mm 17mm; }
+body { font: 10.5pt/1.45 -apple-system, "Helvetica Neue", Arial, sans-serif; color: #111; max-width: 100%; }
+header h1.title { font-size: 19pt; margin: 0 0 2px; }
+header p.subtitle { margin: 0 0 14px; color: #444; font-size: 11pt; }
+h1 { font-size: 13.5pt; margin: 16px 0 6px; border-bottom: 1px solid #999; padding-bottom: 2px; page-break-after: avoid; break-after: avoid; }
+pre, table { break-inside: avoid; }
+p, li { orphans: 3; widows: 3; }
+table { border-collapse: collapse; width: 100%; margin: 8px 0 10px; font-size: 9.5pt; page-break-inside: avoid; }
+th, td { border: 1px solid #aaa; padding: 3px 6px; text-align: left; vertical-align: top; }
+th { background: #eee; }
+code { font-family: Menlo, Consolas, monospace; font-size: 9pt; }
+pre { background: #f2f2f2; padding: 6px 8px; font-size: 8.8pt; white-space: pre-wrap; }
+figure { margin: 8px 0 12px; page-break-inside: avoid; }
+figure img { max-width: 100%; max-height: 92mm; border: 1px solid #ccc; display: block; margin: 0 auto; }
+figcaption { font-size: 9pt; color: #444; }

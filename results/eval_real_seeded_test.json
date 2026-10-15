@@ -1,0 +1,434 @@
+{
+ "clips": 6,
+ "frames": 6184,
+ "by_kind": {
+  "frame_skip": {
+   "labels": 3,
+   "found": 1,
+   "found_as_defect": 0,
+   "false_positives": 2,
+   "recall": 0.333,
+   "precision": 0.333
+  },
+  "black_frame": {
+   "labels": 5,
+   "found": 5,
+   "found_as_defect": 5,
+   "false_positives": 4,
+   "recall": 1.0,
+   "precision": 0.556
+  },
+  "flash_frame": {
+   "labels": 4,
+   "found": 3,
+   "found_as_defect": 3,
+   "false_positives": 0,
+   "recall": 0.75,
+   "precision": 1.0
+  },
+  "frozen_run": {
+   "labels": 3,
+   "found": 2,
+   "found_as_defect": 2,
+   "false_positives": 0,
+   "recall": 0.667,
+   "precision": 1.0
+  },
+  "damaged_frame": {
+   "labels": 3,
+   "found": 3,
+   "found_as_defect": 3,
+   "false_positives": 0,
+   "recall": 1.0,
+   "precision": 1.0
+  }
+ },
+ "false_positives_per_1000_frames": 0.97,
+ "mean_ms_per_frame_first_pass": 6.27,
+ "mean_tool_calls": 30.7,
+ "per_clip": [
+  {
+   "clip": "clip_2001.mp4",
+   "frames": 1248,
+   "labels": [
+    {
+     "kind": "frame_skip",
+     "start": 151,
+     "end": 151,
+     "found": false,
+     "verdict": null,
+     "explained_away": false
+    },
+    {
+     "kind": "black_frame",
+     "start": 632,
+     "end": 632,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    },
+    {
+     "kind": "flash_frame",
+     "start": 739,
+     "end": 739,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    },
+    {
+     "kind": "frozen_run",
+     "start": 790,
+     "end": 800,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    },
+    {
+     "kind": "damaged_frame",
+     "start": 882,
+     "end": 882,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    }
+   ],
+   "false_positives": [
+    {
+     "kind": "frame_skip",
+     "start": 779,
+     "end": 779,
+     "verdict": "defect"
+    }
+   ],
+   "summary": {
+    "source": {
+     "path": "/private/tmp/claude-501/-Volumes-Crucial-X9-workstation-Bounty/7f5cc999-3d5f-4a23-8699-069ea77d351e/scratchpad/ocv/test_real/clip_2001.mp4",
+     "kind": "video",
+     "frame_count": 1248,
+     "width": 640,
+     "height": 360,
+     "fps": 24.0
+    },
+    "opencv_version": "5.0.0",
+    "frames_scanned": 1248,
+    "timings_s": {
+     "probe": 0.004,
+     "scan": 8.112,
+     "agent": 0.358,
+     "total": 8.473
+    },
+    "ms_per_frame_first_pass": 6.5,
+    "peak_python_memory_mb": 57.8,
+    "tool_calls": 30,
+    "redecoded_frames": 169,
+    "budget_exhausted": false,
+    "defects": 5,
+    "needs_review": 0,
+    "dismissed": 25
+   }
+  },
+  {
+   "clip": "clip_2002.mp4",
+   "frames": 1248,
+   "labels": [
+    {
+     "kind": "damaged_frame",
+     "start": 99,
+     "end": 99,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    },
+    {
+     "kind": "flash_frame",
+     "start": 607,
+     "end": 607,
+     "found": false,
+     "verdict": null,
+     "explained_away": false
+    },
+    {
+     "kind": "frame_skip",
+     "start": 722,
+     "end": 722,
+     "found": false,
+     "verdict": null,
+     "explained_away": false
+    },
+    {
+     "kind": "black_frame",
+     "start": 787,
+     "end": 787,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    },
+    {
+     "kind": "frozen_run",
+     "start": 842,
+     "end": 850,
+     "found": false,
+     "verdict": null,
+     "explained_away": true
+    }
+   ],
+   "false_positives": [
+    {
+     "kind": "black_frame",
+     "start": 607,
+     "end": 607,
+     "verdict": "defect"
+    },
+    {
+     "kind": "frame_skip",
+     "start": 778,
+     "end": 778,
+     "verdict": "defect"
+    }
+   ],
+   "summary": {
+    "source": {
+     "path": "/private/tmp/claude-501/-Volumes-Crucial-X9-workstation-Bounty/7f5cc999-3d5f-4a23-8699-069ea77d351e/scratchpad/ocv/test_real/clip_2002.mp4",
+     "kind": "video",
+     "frame_count": 1248,
+     "width": 640,
+     "height": 360,
+     "fps": 24.0
+    },
+    "opencv_version": "5.0.0",
+    "frames_scanned": 1248,
+    "timings_s": {
+     "probe": 0.001,
+     "scan": 8.263,
+     "agent": 0.417,
+     "total": 8.681
+    },
+    "ms_per_frame_first_pass": 6.62,
+    "peak_python_memory_mb": 56.8,
+    "tool_calls": 33,
+    "redecoded_frames": 184,
+    "budget_exhausted": false,
+    "defects": 4,
+    "needs_review": 0,
+    "dismissed": 29
+   }
+  },
+  {
+   "clip": "clip_2003.mp4",
+   "frames": 1249,
+   "labels": [
+    {
+     "kind": "damaged_frame",
+     "start": 174,
+     "end": 174,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    },
+    {
+     "kind": "frame_skip",
+     "start": 560,
+     "end": 560,
+     "found": true,
+     "verdict": "needs_review",
+     "explained_away": false
+    },
+    {
+     "kind": "frozen_run",
+     "start": 597,
+     "end": 608,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    },
+    {
+     "kind": "black_frame",
+     "start": 730,
+     "end": 731,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    },
+    {
+     "kind": "flash_frame",
+     "start": 836,
+     "end": 836,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    }
+   ],
+   "false_positives": [],
+   "summary": {
+    "source": {
+     "path": "/private/tmp/claude-501/-Volumes-Crucial-X9-workstation-Bounty/7f5cc999-3d5f-4a23-8699-069ea77d351e/scratchpad/ocv/test_real/clip_2003.mp4",
+     "kind": "video",
+     "frame_count": 1249,
+     "width": 640,
+     "height": 360,
+     "fps": 24.0
+    },
+    "opencv_version": "5.0.0",
+    "frames_scanned": 1249,
+    "timings_s": {
+     "probe": 0.002,
+     "scan": 7.562,
+     "agent": 0.36,
+     "total": 7.924
+    },
+    "ms_per_frame_first_pass": 6.05,
+    "peak_python_memory_mb": 56.8,
+    "tool_calls": 31,
+    "redecoded_frames": 169,
+    "budget_exhausted": false,
+    "defects": 4,
+    "needs_review": 1,
+    "dismissed": 26
+   }
+  },
+  {
+   "clip": "clip_3001.mp4",
+   "frames": 812,
+   "labels": [
+    {
+     "kind": "flash_frame",
+     "start": 636,
+     "end": 636,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    }
+   ],
+   "false_positives": [
+    {
+     "kind": "black_frame",
+     "start": 472,
+     "end": 473,
+     "verdict": "needs_review"
+    }
+   ],
+   "summary": {
+    "source": {
+     "path": "/private/tmp/claude-501/-Volumes-Crucial-X9-workstation-Bounty/7f5cc999-3d5f-4a23-8699-069ea77d351e/scratchpad/ocv/test_real/clip_3001.mp4",
+     "kind": "video",
+     "frame_count": 812,
+     "width": 640,
+     "height": 360,
+     "fps": 25.0
+    },
+    "opencv_version": "5.0.0",
+    "frames_scanned": 812,
+    "timings_s": {
+     "probe": 0.002,
+     "scan": 5.019,
+     "agent": 0.474,
+     "total": 5.495
+    },
+    "ms_per_frame_first_pass": 6.18,
+    "peak_python_memory_mb": 11.8,
+    "tool_calls": 30,
+    "redecoded_frames": 135,
+    "budget_exhausted": false,
+    "defects": 1,
+    "needs_review": 1,
+    "dismissed": 28
+   }
+  },
+  {
+   "clip": "clip_3002.mp4",
+   "frames": 813,
+   "labels": [
+    {
+     "kind": "black_frame",
+     "start": 635,
+     "end": 635,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    }
+   ],
+   "false_positives": [
+    {
+     "kind": "black_frame",
+     "start": 472,
+     "end": 473,
+     "verdict": "needs_review"
+    }
+   ],
+   "summary": {
+    "source": {
+     "path": "/private/tmp/claude-501/-Volumes-Crucial-X9-workstation-Bounty/7f5cc999-3d5f-4a23-8699-069ea77d351e/scratchpad/ocv/test_real/clip_3002.mp4",
+     "kind": "video",
+     "frame_count": 813,
+     "width": 640,
+     "height": 360,
+     "fps": 25.0
+    },
+    "opencv_version": "5.0.0",
+    "frames_scanned": 813,
+    "timings_s": {
+     "probe": 0.001,
+     "scan": 4.955,
+     "agent": 0.422,
+     "total": 5.378
+    },
+    "ms_per_frame_first_pass": 6.1,
+    "peak_python_memory_mb": 11.8,
+    "tool_calls": 30,
+    "redecoded_frames": 132,
+    "budget_exhausted": false,
+    "defects": 1,
+    "needs_review": 1,
+    "dismissed": 28
+   }
+  },
+  {
+   "clip": "clip_3003.mp4",
+   "frames": 814,
+   "labels": [
+    {
+     "kind": "black_frame",
+     "start": 638,
+     "end": 639,
+     "found": true,
+     "verdict": "defect",
+     "explained_away": false
+    }
+   ],
+   "false_positives": [
+    {
+     "kind": "black_frame",
+     "start": 472,
+     "end": 473,
+     "verdict": "needs_review"
+    }
+   ],
+   "summary": {
+    "source": {
+     "path": "/private/tmp/claude-501/-Volumes-Crucial-X9-workstation-Bounty/7f5cc999-3d5f-4a23-8699-069ea77d351e/scratchpad/ocv/test_real/clip_3003.mp4",
+     "kind": "video",
+     "frame_count": 814,
+     "width": 640,
+     "height": 360,
+     "fps": 25.0
+    },
+    "opencv_version": "5.0.0",
+    "frames_scanned": 814,
+    "timings_s": {
+     "probe": 0.001,
+     "scan": 5.01,
+     "agent": 0.479,
+     "total": 5.49
+    },
+    "ms_per_frame_first_pass": 6.15,
+    "peak_python_memory_mb": 11.8,
+    "tool_calls": 30,
+    "redecoded_frames": 132,
+    "budget_exhausted": false,
+    "defects": 1,
+    "needs_review": 1,
+    "dismissed": 28
+   }
+  }
+ ]
+}

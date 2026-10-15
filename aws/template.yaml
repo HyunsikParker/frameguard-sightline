@@ -1,0 +1,338 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >
+  FrameGuard Sightline - OpenCV 5 frame quality control with an agent loop and human approval.
+  S3 stores uploads and reports, Step Functions runs analyze -> wait for a person -> act,
+  an arm64 (Graviton) Lambda runs OpenCV, DynamoDB keeps job state, an HTTP API serves the review page.
+
+Parameters:
+  ArtifactBucket:
+    Type: String
+    Description: Bucket that holds the two Lambda zip files.
+  AnalyzerKey:
+    Type: String
+  ApiKey:
+    Type: String
+  RetentionDays:
+    Type: Number
+    Default: 7
+    Description: Uploads, reports and logs are deleted after this many days.
+  DailyJobLimit:
+    Type: Number
+    Default: 10
+    MinValue: 1
+    Description: >
+      Jobs accepted per UTC day. This limits the analyses the public page can start; it is not a
+      cap on total spend (page requests and media downloads are not counted).
+
+Resources:
+  JobBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      CorsConfiguration:
+        CorsRules:
+          # Only the review page may post uploads; media are read through presigned links.
+          - AllowedMethods: [POST]
+            AllowedOrigins: [!GetAtt HttpApi.ApiEndpoint]
+            AllowedHeaders: ["*"]
+            MaxAge: 600
+      LifecycleConfiguration:
+        Rules:
+          - Id: expire-everything
+            Status: Enabled
+            ExpirationInDays: !Ref RetentionDays
+
+  JobTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: job_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: job_id
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: expires_at
+        Enabled: true
+
+  AnalyzerLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-analyzer
+      RetentionInDays: !Ref RetentionDays
+
+  ApiLogs:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${AWS::StackName}-api
+      RetentionInDays: !Ref RetentionDays
+
+  AnalyzerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/sightline-runtime-boundary
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: job-data
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: !Sub ${JobBucket.Arn}/*
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt JobBucket.Arn
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:UpdateItem]
+                Resource: !GetAtt JobTable.Arn
+
+  ApiRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/sightline-runtime-boundary
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: job-api
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [s3:GetObject, s3:PutObject]
+                Resource: !Sub ${JobBucket.Arn}/*
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt JobBucket.Arn
+              - Effect: Allow
+                Action: [dynamodb:GetItem, dynamodb:PutItem, dynamodb:UpdateItem]
+                Resource: !GetAtt JobTable.Arn
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource: !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}-jobs
+              - Effect: Allow
+                Action: [states:SendTaskSuccess, states:SendTaskFailure]
+                Resource: "*"
+
+  AnalyzerFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: AnalyzerLogs
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-analyzer
+      Runtime: python3.13
+      Architectures: [arm64]
+      Handler: handler.handler
+      Role: !GetAtt AnalyzerRole.Arn
+      MemorySize: 2048
+      Timeout: 600
+      EphemeralStorage:
+        Size: 2048
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref AnalyzerKey
+      Environment:
+        Variables:
+          JOB_BUCKET: !Ref JobBucket
+          JOB_TABLE: !Ref JobTable
+
+  ApiFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: ApiLogs
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-api
+      Runtime: python3.13
+      Architectures: [arm64]
+      Handler: handler.handler
+      Role: !GetAtt ApiRole.Arn
+      MemorySize: 256
+      Timeout: 15
+      Code:
+        S3Bucket: !Ref ArtifactBucket
+        S3Key: !Ref ApiKey
+      Environment:
+        Variables:
+          JOB_BUCKET: !Ref JobBucket
+          JOB_TABLE: !Ref JobTable
+          STATE_MACHINE_ARN: !Sub arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${AWS::StackName}-jobs
+          MAX_UPLOAD_BYTES: "83886080"
+          RETENTION_DAYS: !Ref RetentionDays
+          MAX_JOBS_PER_DAY: !Ref DailyJobLimit
+
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      PermissionsBoundary: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:policy/sightline-runtime-boundary
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: states.amazonaws.com }
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: invoke
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: [!GetAtt AnalyzerFunction.Arn, !GetAtt ApiFunction.Arn]
+              - Effect: Allow
+                Action: dynamodb:UpdateItem
+                Resource: !GetAtt JobTable.Arn
+
+  JobStateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      StateMachineName: !Sub ${AWS::StackName}-jobs
+      RoleArn: !GetAtt StateMachineRole.Arn
+      DefinitionString: !Sub |
+        {
+          "Comment": "Sightline job: perceive and decide, wait for a person, then act and verify.",
+          "StartAt": "Analyze",
+          "States": {
+            "Analyze": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${AnalyzerFunction.Arn}",
+                "Payload": {"action": "analyze", "job_id.$": "$.job_id", "input_name.$": "$.input_name"}
+              },
+              "ResultSelector": {"pending.$": "$.Payload.pending"},
+              "ResultPath": "$.analysis",
+              "Retry": [{"ErrorEquals": ["Lambda.ServiceException", "Lambda.TooManyRequestsException"], "IntervalSeconds": 5, "MaxAttempts": 3, "BackoffRate": 2}],
+              "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "MarkFailed"}],
+              "Next": "NeedsPerson"
+            },
+            "NeedsPerson": {
+              "Type": "Choice",
+              "Choices": [{"Variable": "$.analysis.pending", "NumericGreaterThan": 0, "Next": "WaitForPerson"}],
+              "Default": "Done"
+            },
+            "WaitForPerson": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
+              "Parameters": {
+                "FunctionName": "${ApiFunction.Arn}",
+                "Payload": {"action": "register_token", "job_id.$": "$.job_id", "token.$": "$$.Task.Token"}
+              },
+              "TimeoutSeconds": 86400,
+              "ResultPath": "$.person",
+              "Catch": [
+                {"ErrorEquals": ["States.Timeout"], "ResultPath": "$.error", "Next": "MarkExpired"},
+                {"ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "MarkFailed"}
+              ],
+              "Next": "Act"
+            },
+            "Act": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${AnalyzerFunction.Arn}",
+                "Payload": {"action": "act", "job_id.$": "$.job_id", "input_name.$": "$.input_name", "decisions.$": "$.person.decisions"}
+              },
+              "ResultSelector": {"repaired.$": "$.Payload.repaired_ranges", "rerender.$": "$.Payload.rerender_ranges"},
+              "ResultPath": "$.actions",
+              "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "MarkFailed"}],
+              "Next": "Done"
+            },
+            "MarkExpired": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${JobTable}",
+                "Key": {"job_id": {"S.$": "$.job_id"}},
+                "UpdateExpression": "SET #s = :s REMOVE task_token",
+                "ExpressionAttributeNames": {"#s": "status"},
+                "ExpressionAttributeValues": {":s": {"S": "expired"}}
+              },
+              "ResultPath": null,
+              "Next": "NoDecision"
+            },
+            "MarkFailed": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::dynamodb:updateItem",
+              "Parameters": {
+                "TableName": "${JobTable}",
+                "Key": {"job_id": {"S.$": "$.job_id"}},
+                "UpdateExpression": "SET #s = :s, #e = :e REMOVE task_token",
+                "ExpressionAttributeNames": {"#s": "status", "#e": "error"},
+                "ExpressionAttributeValues": {":s": {"S": "failed"}, ":e": {"S": "The job stopped with an error; the workflow and Lambda logs have the details."}}
+              },
+              "ResultPath": null,
+              "Next": "Failed"
+            },
+            "NoDecision": {"Type": "Succeed", "Comment": "Nobody decided within a day; nothing was changed."},
+            "Done": {"Type": "Succeed"},
+            "Failed": {"Type": "Fail", "Error": "SightlineJobFailed"}
+          }
+        }
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${AWS::StackName}-http
+      ProtocolType: HTTP
+
+  ApiIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !GetAtt ApiFunction.Arn
+      PayloadFormatVersion: "2.0"
+
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: $default
+      Target: !Sub integrations/${ApiIntegration}
+
+  DefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      StageName: $default
+      AutoDeploy: true
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 10
+        ThrottlingRateLimit: 5
+
+  ApiInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref ApiFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${HttpApi}/*
+
+Outputs:
+  ApiUrl:
+    Description: Review page and API
+    Value: !GetAtt HttpApi.ApiEndpoint
+  JobBucketName:
+    Value: !Ref JobBucket
+  StateMachineArn:
+    Value: !Ref JobStateMachine

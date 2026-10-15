@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="860" viewBox="0 0 1400 860" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3b4450"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #3b4450; stroke-width: 1.5; }
+      .svc { fill: #f4f6f8; stroke: #3b4450; stroke-width: 1.5; }
+      .agent { fill: #eef4fb; stroke: #1f4e8c; stroke-width: 1.8; }
+      .person { fill: #fff4e0; stroke: #9a5b00; stroke-width: 1.8; }
+      .title { font-size: 17px; font-weight: 700; fill: #1d2126; }
+      .text { font-size: 13.5px; fill: #1d2126; }
+      .small { font-size: 12px; fill: #5f6873; }
+      .edge { stroke: #3b4450; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+      .edge-label { font-size: 12px; fill: #3b4450; }
+    </style>
+  </defs>
+  <rect width="1400" height="860" fill="#ffffff"/>
+  <text x="40" y="44" class="title" font-size="22">FrameGuard Sightline on AWS</text>
+  <text x="40" y="68" class="small">Free-plan account, region ap-southeast-2 (Sydney). Everything inside the dashed line is created by aws/template.yaml and removed by aws/teardown.sh.</text>
+
+  <!-- Reviewer -->
+  <rect x="40" y="130" width="230" height="150" rx="10" class="person"/>
+  <text x="58" y="160" class="title">Reviewer's browser</text>
+  <text x="58" y="186" class="text">Review page: upload a clip,</text>
+  <text x="58" y="206" class="text">see evidence frames and the</text>
+  <text x="58" y="226" class="text">agent's trace, approve or</text>
+  <text x="58" y="246" class="text">reject, play the repaired preview.</text>
+
+  <!-- AWS boundary -->
+  <rect x="320" y="95" width="1050" height="730" rx="14" fill="none" stroke="#5f6873" stroke-dasharray="8 6" stroke-width="1.5"/>
+  <text x="340" y="128" class="small">AWS account (Free plan), ap-southeast-2</text>
+
+  <!-- API Gateway + API Lambda -->
+  <rect x="350" y="140" width="250" height="70" rx="8" class="svc"/>
+  <text x="366" y="168" class="text" font-weight="700">API Gateway HTTP API</text>
+  <text x="366" y="190" class="small">5 req/s throttle, one route</text>
+
+  <rect x="350" y="250" width="250" height="120" rx="8" class="svc"/>
+  <text x="366" y="278" class="text" font-weight="700">API Lambda (arm64)</text>
+  <text x="366" y="300" class="small">serves the page, presigned upload,</text>
+  <text x="366" y="318" class="small">job status, records decisions and</text>
+  <text x="366" y="336" class="small">resumes the workflow; at most</text>
+  <text x="366" y="354" class="small">10 jobs per UTC day</text>
+
+  <!-- S3 and DynamoDB -->
+  <rect x="660" y="140" width="300" height="90" rx="8" class="svc"/>
+  <text x="676" y="168" class="text" font-weight="700">Amazon S3 (private)</text>
+  <text x="676" y="190" class="small">uploads/, jobs/&lt;id&gt;/ findings, trace,</text>
+  <text x="676" y="208" class="small">thumbnails, repair preview; 7-day expiry</text>
+
+  <rect x="1010" y="140" width="330" height="90" rx="8" class="svc"/>
+  <text x="1026" y="168" class="text" font-weight="700">Amazon DynamoDB</text>
+  <text x="1026" y="190" class="small">job status, summary, decisions,</text>
+  <text x="1026" y="208" class="small">task token while a person decides</text>
+
+  <!-- Step Functions -->
+  <rect x="350" y="420" width="990" height="120" rx="10" class="svc"/>
+  <text x="366" y="446" class="text" font-weight="700">AWS Step Functions (standard workflow)</text>
+  <rect x="370" y="462" width="160" height="56" rx="6" class="box"/>
+  <text x="386" y="495" class="text">Analyze</text>
+  <rect x="580" y="462" width="190" height="56" rx="6" class="box"/>
+  <text x="596" y="486" class="text">Anything pending</text>
+  <text x="596" y="505" class="text">for a person?</text>
+  <rect x="820" y="462" width="240" height="56" rx="6" class="person"/>
+  <text x="836" y="486" class="text">Wait for the person</text>
+  <text x="836" y="505" class="small">task token, up to 24 h</text>
+  <rect x="1110" y="462" width="210" height="56" rx="6" class="box"/>
+  <text x="1126" y="486" class="text">Act and re-check</text>
+  <text x="1126" y="505" class="small">approved actions only</text>
+  <path d="M530 490 H574" class="edge"/>
+  <path d="M770 490 H814" class="edge"/>
+  <path d="M1060 490 H1104" class="edge"/>
+  <text x="776" y="458" class="edge-label">yes</text>
+
+  <!-- Analyzer Lambda with the agent loop -->
+  <rect x="350" y="590" width="990" height="210" rx="10" class="agent"/>
+  <text x="366" y="616" class="text" font-weight="700">Analyzer Lambda: Python 3.13, arm64 Graviton, OpenCV 5.0 headless</text>
+  <rect x="370" y="634" width="170" height="70" rx="6" class="box"/>
+  <text x="384" y="660" class="text">Scan every frame</text>
+  <text x="384" y="680" class="small">luma, pHash, HSV hist,</text>
+  <text x="384" y="696" class="small">edges, block grid, flow</text>
+  <rect x="570" y="634" width="150" height="70" rx="6" class="box"/>
+  <text x="584" y="660" class="text">Candidates</text>
+  <text x="584" y="680" class="small">suspicions with</text>
+  <text x="584" y="696" class="small">a margin</text>
+  <rect x="750" y="634" width="200" height="70" rx="6" class="box"/>
+  <text x="764" y="660" class="text">Follow-up checks</text>
+  <text x="764" y="680" class="small">re-decode a window; the</text>
+  <text x="764" y="696" class="small">measurement picks the tool</text>
+  <rect x="980" y="634" width="160" height="70" rx="6" class="box"/>
+  <text x="994" y="660" class="text">Verdicts + trace</text>
+  <text x="994" y="680" class="small">defect / dismissed /</text>
+  <text x="994" y="696" class="small">needs review</text>
+  <rect x="1170" y="634" width="150" height="70" rx="6" class="person"/>
+  <text x="1184" y="660" class="text">Approval</text>
+  <text x="1184" y="680" class="small">a person decides</text>
+  <text x="1184" y="696" class="small">each action</text>
+  <path d="M540 669 H564" class="edge"/>
+  <path d="M720 669 H744" class="edge"/>
+  <path d="M950 669 H974" class="edge"/>
+  <path d="M1140 669 H1164" class="edge"/>
+  <rect x="750" y="730" width="390" height="54" rx="6" class="box"/>
+  <text x="764" y="753" class="text">Actions: repair preview or re-render list</text>
+  <text x="764" y="772" class="small">then the agent analyses the preview again</text>
+  <path d="M1245 704 V757 H1146" class="edge"/>
+  <text x="380" y="740" class="small">Budget: 60 checks and 1,200 re-decoded</text>
+  <text x="380" y="758" class="small">frames per job; leftovers go to review.</text>
+
+  <!-- CloudWatch -->
+  <rect x="40" y="620" width="260" height="120" rx="8" class="svc"/>
+  <text x="56" y="648" class="text" font-weight="700">Amazon CloudWatch</text>
+  <text x="56" y="670" class="small">logs (7-day retention) and</text>
+  <text x="56" y="688" class="small">metrics: frames, ms/frame,</text>
+  <text x="56" y="706" class="small">defects, reviews, checks;</text>
+  <text x="56" y="724" class="small">no image content</text>
+
+  <!-- Edges between services -->
+  <path d="M270 190 H344" class="edge"/>
+  <text x="276" y="182" class="edge-label">HTTPS</text>
+  <path d="M475 210 V244" class="edge"/>
+  <path d="M200 130 V86 H760 V134" class="edge" stroke-dasharray="6 5"/>
+  <text x="790" y="90" class="edge-label">the upload goes straight to S3 with a presigned form</text>
+  <path d="M600 280 H700 V236" class="edge"/>
+  <path d="M600 310 H1100 V236" class="edge"/>
+  <path d="M475 370 V414" class="edge"/>
+  <text x="484" y="392" class="edge-label">start / send decision</text>
+  <path d="M450 518 V584" class="edge"/>
+  <path d="M1215 518 V584" class="edge"/>
+  <path d="M940 462 C 940 400, 640 400, 600 366" class="edge"/>
+  <text x="700" y="398" class="edge-label">task token</text>
+  <path d="M344 700 H306" class="edge"/>
+
+  <!-- IAM permissions boundary, created once by an administrator outside the stack -->
+  <rect x="40" y="764" width="260" height="76" rx="8" class="svc" stroke-dasharray="5 4"/>
+  <text x="56" y="788" class="text" font-weight="700">IAM permissions boundary</text>
+  <text x="56" y="808" class="small">sightline-runtime-boundary caps</text>
+  <text x="56" y="826" class="small">every role in the stack</text>
+</svg>

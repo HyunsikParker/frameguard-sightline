@@ -1,0 +1,90 @@
+{
+ "clips": 2,
+ "frames": 2065,
+ "by_kind": {
+  "black_frame": {
+   "labels": 0,
+   "found": 0,
+   "found_as_defect": 0,
+   "false_positives": 1,
+   "recall": null,
+   "precision": 0.0
+  }
+ },
+ "false_positives_per_1000_frames": 0.48,
+ "mean_ms_per_frame_first_pass": 8.69,
+ "mean_tool_calls": 25.0,
+ "per_clip": [
+  {
+   "clip": "clip_bbb_trailer.mov",
+   "frames": 812,
+   "labels": [],
+   "false_positives": [
+    {
+     "kind": "black_frame",
+     "start": 472,
+     "end": 473,
+     "verdict": "needs_review"
+    }
+   ],
+   "summary": {
+    "source": {
+     "path": "data/real/clean/clip_bbb_trailer.mov",
+     "kind": "video",
+     "frame_count": 812,
+     "width": 1920,
+     "height": 1080,
+     "fps": 25.0
+    },
+    "opencv_version": "5.0.0",
+    "frames_scanned": 812,
+    "timings_s": {
+     "probe": 0.004,
+     "scan": 6.893,
+     "agent": 1.453,
+     "total": 8.351
+    },
+    "ms_per_frame_first_pass": 8.49,
+    "peak_python_memory_mb": 40.8,
+    "tool_calls": 27,
+    "redecoded_frames": 129,
+    "budget_exhausted": false,
+    "defects": 0,
+    "needs_review": 1,
+    "dismissed": 26
+   }
+  },
+  {
+   "clip": "clip_sintel_trailer.mp4",
+   "frames": 1253,
+   "labels": [],
+   "false_positives": [],
+   "summary": {
+    "source": {
+     "path": "data/real/clean/clip_sintel_trailer.mp4",
+     "kind": "video",
+     "frame_count": 1253,
+     "width": 1920,
+     "height": 1080,
+     "fps": 24.0
+    },
+    "opencv_version": "5.0.0",
+    "frames_scanned": 1253,
+    "timings_s": {
+     "probe": 0.006,
+     "scan": 11.132,
+     "agent": 2.167,
+     "total": 13.306
+    },
+    "ms_per_frame_first_pass": 8.88,
+    "peak_python_memory_mb": 129.7,
+    "tool_calls": 23,
+    "redecoded_frames": 148,
+    "budget_exhausted": false,
+    "defects": 0,
+    "needs_review": 0,
+    "dismissed": 23
+   }
+  }
+ ]
+}

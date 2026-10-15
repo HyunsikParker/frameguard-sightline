@@ -1,0 +1,192 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "StackLifecycleOnlyForTheSightlineStack",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:CreateChangeSet",
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:GetTemplateSummary",
+        "cloudformation:DescribeChangeSet",
+        "cloudformation:ExecuteChangeSet",
+        "cloudformation:DeleteChangeSet",
+        "cloudformation:DeleteStack"
+      ],
+      "Resource": "arn:aws:cloudformation:<REGION>:<ACCOUNT_ID>:stack/sightline/*"
+    },
+    {
+      "Sid": "ArtifactBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket",
+        "s3:CreateBucket",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:DeleteBucket"
+      ],
+      "Resource": "arn:aws:s3:::sightline-artifacts-<ACCOUNT_ID>-<REGION>"
+    },
+    {
+      "Sid": "ArtifactObjectsAlsoReadByLambdaCreate",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:GetObjectVersion",
+        "s3:DeleteObject",
+        "s3:AbortMultipartUpload"
+      ],
+      "Resource": "arn:aws:s3:::sightline-artifacts-<ACCOUNT_ID>-<REGION>/*"
+    },
+    {
+      "Sid": "JobBucketViaStack",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:ListBucket",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutEncryptionConfiguration",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutBucketCORS",
+        "s3:GetBucketCORS",
+        "s3:PutLifecycleConfiguration",
+        "s3:GetLifecycleConfiguration",
+        "s3:PutBucketTagging",
+        "s3:GetBucketTagging",
+        "s3:TagResource",
+        "s3:ListTagsForResource",
+        "s3:GetBucketAcl",
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketVersioning",
+        "s3:GetBucketLogging",
+        "s3:GetBucketNotification",
+        "s3:GetBucketWebsite",
+        "s3:GetBucketObjectLockConfiguration",
+        "s3:GetAccelerateConfiguration",
+        "s3:GetAnalyticsConfiguration",
+        "s3:GetInventoryConfiguration",
+        "s3:GetMetricsConfiguration",
+        "s3:GetReplicationConfiguration",
+        "s3:GetIntelligentTieringConfiguration"
+      ],
+      "Resource": "arn:aws:s3:::sightline-jobbucket-*"
+    },
+    {
+      "Sid": "JobBucketEmptyOnTeardown",
+      "Effect": "Allow",
+      "Action": "s3:DeleteObject",
+      "Resource": "arn:aws:s3:::sightline-jobbucket-*/*"
+    },
+    {
+      "Sid": "JobTable",
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:CreateTable",
+        "dynamodb:DescribeTable",
+        "dynamodb:DeleteTable",
+        "dynamodb:UpdateTimeToLive",
+        "dynamodb:DescribeTimeToLive",
+        "dynamodb:DescribeContinuousBackups",
+        "dynamodb:DescribeContributorInsights",
+        "dynamodb:DescribeKinesisStreamingDestination",
+        "dynamodb:GetResourcePolicy",
+        "dynamodb:ListTagsOfResource"
+      ],
+      "Resource": "arn:aws:dynamodb:<REGION>:<ACCOUNT_ID>:table/sightline-JobTable-*"
+    },
+    {
+      "Sid": "LogGroups",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:DeleteLogGroup",
+        "logs:PutRetentionPolicy",
+        "logs:DeleteRetentionPolicy",
+        "logs:TagResource",
+        "logs:UntagResource",
+        "logs:ListTagsForResource",
+        "logs:GetDataProtectionPolicy",
+        "logs:DescribeIndexPolicies"
+      ],
+      "Resource": [
+        "arn:aws:logs:<REGION>:<ACCOUNT_ID>:log-group:/aws/lambda/sightline-analyzer",
+        "arn:aws:logs:<REGION>:<ACCOUNT_ID>:log-group:/aws/lambda/sightline-analyzer:*",
+        "arn:aws:logs:<REGION>:<ACCOUNT_ID>:log-group:/aws/lambda/sightline-api",
+        "arn:aws:logs:<REGION>:<ACCOUNT_ID>:log-group:/aws/lambda/sightline-api:*"
+      ]
+    },
+    {
+      "Sid": "LogGroupListingHasNoResourceScope",
+      "Effect": "Allow",
+      "Action": [
+        "logs:DescribeLogGroups",
+        "logs:DescribeResourcePolicies"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestedRegion": "<REGION>"
+        }
+      }
+    },
+    {
+      "Sid": "Functions",
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:GetFunction",
+        "lambda:DeleteFunction",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:GetFunctionCodeSigningConfig",
+        "lambda:GetFunctionRecursionConfig",
+        "lambda:GetFunctionScalingConfig",
+        "lambda:GetRuntimeManagementConfig",
+        "lambda:TagResource",
+        "lambda:UntagResource",
+        "lambda:ListTags",
+        "lambda:AddPermission",
+        "lambda:RemovePermission",
+        "lambda:GetPolicy"
+      ],
+      "Resource": [
+        "arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:sightline-analyzer",
+        "arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:sightline-api"
+      ]
+    },
+    {
+      "Sid": "Workflow",
+      "Effect": "Allow",
+      "Action": [
+        "states:CreateStateMachine",
+        "states:DescribeStateMachine",
+        "states:UpdateStateMachine",
+        "states:DeleteStateMachine",
+        "states:TagResource",
+        "states:UntagResource",
+        "states:ListTagsForResource"
+      ],
+      "Resource": "arn:aws:states:<REGION>:<ACCOUNT_ID>:stateMachine:sightline-jobs"
+    },
+    {
+      "Sid": "HttpApiIdIsRandomSoScopeToApis",
+      "Effect": "Allow",
+      "Action": [
+        "apigateway:POST",
+        "apigateway:GET",
+        "apigateway:PATCH",
+        "apigateway:PUT",
+        "apigateway:DELETE",
+        "apigateway:TagResource"
+      ],
+      "Resource": [
+        "arn:aws:apigateway:<REGION>::/apis",
+        "arn:aws:apigateway:<REGION>::/apis/*",
+        "arn:aws:apigateway:<REGION>::/tags/*"
+      ]
+    }
+  ]
+}

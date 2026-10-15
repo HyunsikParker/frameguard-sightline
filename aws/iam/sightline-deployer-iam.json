@@ -1,0 +1,71 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CreateStackRolesOnlyWithTheRuntimeBoundary",
+      "Effect": "Allow",
+      "Action": "iam:CreateRole",
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/sightline-*",
+      "Condition": {
+        "StringEquals": {"iam:PermissionsBoundary": "arn:aws:iam::<ACCOUNT_ID>:policy/sightline-runtime-boundary"}
+      }
+    },
+    {
+      "Sid": "ChangeOrDeleteOnlyBoundedStackRoles",
+      "Effect": "Allow",
+      "Action": ["iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:DeleteRole", "iam:UpdateAssumeRolePolicy"],
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/sightline-*",
+      "Condition": {
+        "StringEquals": {"iam:PermissionsBoundary": "arn:aws:iam::<ACCOUNT_ID>:policy/sightline-runtime-boundary"}
+      }
+    },
+    {
+      "Sid": "AttachOnlyLambdaBasicExecutionToBoundedStackRoles",
+      "Effect": "Allow",
+      "Action": ["iam:AttachRolePolicy", "iam:DetachRolePolicy"],
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/sightline-*",
+      "Condition": {
+        "ArnEquals": {"iam:PolicyARN": "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"},
+        "StringEquals": {"iam:PermissionsBoundary": "arn:aws:iam::<ACCOUNT_ID>:policy/sightline-runtime-boundary"}
+      }
+    },
+    {
+      "Sid": "ReadStackRoles",
+      "Effect": "Allow",
+      "Action": ["iam:GetRole", "iam:GetRolePolicy", "iam:ListRolePolicies", "iam:ListAttachedRolePolicies"],
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/sightline-*"
+    },
+    {
+      "Sid": "PassStackRolesOnlyToLambdaAndStepFunctions",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:role/sightline-*",
+      "Condition": {"StringEquals": {"iam:PassedToService": ["lambda.amazonaws.com", "states.amazonaws.com"]}}
+    },
+    {
+      "Sid": "NeverRemoveOrReplaceABoundary",
+      "Effect": "Deny",
+      "Action": ["iam:DeleteRolePermissionsBoundary", "iam:PutRolePermissionsBoundary"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "NeverManageTheBoundaryPolicy",
+      "Effect": "Deny",
+      "Action": [
+        "iam:CreatePolicy", "iam:CreatePolicyVersion", "iam:DeletePolicy", "iam:DeletePolicyVersion",
+        "iam:SetDefaultPolicyVersion", "iam:TagPolicy", "iam:UntagPolicy"
+      ],
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:policy/sightline-runtime-boundary"
+    },
+    {
+      "Sid": "NeverChangeOwnPermissionsOrKeys",
+      "Effect": "Deny",
+      "Action": [
+        "iam:AttachUserPolicy", "iam:DetachUserPolicy", "iam:PutUserPolicy", "iam:DeleteUserPolicy",
+        "iam:PutUserPermissionsBoundary", "iam:DeleteUserPermissionsBoundary",
+        "iam:CreateAccessKey", "iam:UpdateAccessKey", "iam:CreateLoginProfile", "iam:UpdateLoginProfile"
+      ],
+      "Resource": "arn:aws:iam::<ACCOUNT_ID>:user/sightline-deployer"
+    }
+  ]
+}

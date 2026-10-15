@@ -1,0 +1,25 @@
+# Environments, caches and build output
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+aws/build/
+demo/build/
+dist/
+jobs/
+
+# Footage and generated test sets: the Blender trailers are not redistributed here
+data/
+
+# Internal planning and gate notes, and the August proposal tooling
+official-gates.md
+DEPLOY_GATE.md
+proposal.md
+output/
+scripts/
+docs/RULES_READ_*.md
+
+# Devpost submission draft and gallery (entered into Devpost, not part of the code)
+submission/

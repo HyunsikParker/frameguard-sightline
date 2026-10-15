@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sightline review</title>
+<style>
+  :root {
+    --ink: #1d2126; --muted: #5f6873; --line: #d9dde2; --panel: #ffffff; --page: #f3f4f6;
+    --defect: #b42318; --defect-bg: #fdecea; --review: #9a5b00; --review-bg: #fff4e0;
+    --dismissed: #5f6873; --dismissed-bg: #eef0f2; --ok: #1f7a3e; --ok-bg: #e7f5ec; --accent: #1f4e8c;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--ink); background: var(--page); }
+  header { padding: 18px 24px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { margin: 0; font-size: 19px; }
+  header p { margin: 2px 0 0; color: var(--muted); }
+  main { max-width: 1180px; margin: 0 auto; padding: 20px 24px 60px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; min-width: 0; overflow-x: auto; }
+  h2 { margin: 0 0 10px; font-size: 16px; }
+  .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  button { font: inherit; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+  button.secondary { background: #fff; color: var(--accent); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid #7aa7e0; outline-offset: 2px; }
+  .status { font-family: var(--mono); font-size: 13px; padding: 2px 8px; border-radius: 4px; background: var(--dismissed-bg); }
+  .steps { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .step { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .step.done { border-color: var(--ok); color: var(--ok); background: var(--ok-bg); }
+  .step.now { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .metric { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+  .metric b { display: block; font-size: 20px; font-family: var(--mono); }
+  .metric span { color: var(--muted); font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 13px; color: var(--muted); font-weight: 600; }
+  td.frames { font-family: var(--mono); white-space: nowrap; }
+  .verdict { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 4px; white-space: nowrap; }
+  .v-defect { color: var(--defect); background: var(--defect-bg); }
+  .v-needs_review { color: var(--review); background: var(--review-bg); }
+  .v-dismissed { color: var(--dismissed); background: var(--dismissed-bg); }
+  .v-approved { color: var(--ok); background: var(--ok-bg); }
+  .thumbs { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .thumbs figure { margin: 0; }
+  .thumbs img { width: 120px; height: auto; display: block; border-radius: 3px; border: 1px solid var(--line); }
+  .thumbs figcaption { font: 11px var(--mono); color: var(--muted); }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; color: var(--accent); font-size: 13px; }
+  ol.trace { margin: 6px 0 0; padding-left: 18px; font-size: 13px; }
+  ol.trace li { margin-bottom: 6px; }
+  ol.trace ul { margin: 2px 0 0; padding-left: 16px; list-style: square; color: var(--muted); }
+  ol.trace ul b { font-weight: 600; color: var(--ink); }
+  ol.trace code { font-family: var(--mono); font-size: 12px; word-break: break-word; }
+  .choice { display: flex; gap: 10px; font-size: 14px; }
+  .error { color: var(--defect); }
+  .muted { color: var(--muted); }
+  video { max-width: 100%; border-radius: 6px; }
+  @media (max-width: 720px) {
+    main { padding: 12px; }
+    th:nth-child(4), td:nth-child(4) { display: none; }
+    .thumbs img { width: 84px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sightline review</h1>
+  <p>Upload a rendered or exported clip. OpenCV 5 checks every frame, an agent re-checks each suspicion, and you decide what happens to the footage.</p>
+</header>
+<main>
+  <section aria-labelledby="h-upload">
+    <h2 id="h-upload">1. Clip</h2>
+    <div class="row">
+      <input id="file" type="file" accept="video/*" aria-label="Video file">
+      <button id="run" disabled>Upload and analyse</button>
+      <span id="state" class="status" role="status" aria-live="polite">no job</span>
+    </div>
+    <p class="muted" id="limits">MP4, MOV, M4V, MKV or AVI. Up to 80 MB and 3,000 frames. Files and reports are deleted after 7 days.</p>
+    <div class="steps" id="steps" aria-label="Workflow">
+      <span class="step" data-s="upload">Upload</span><span class="step" data-s="analyzing">Scan and checks</span>
+      <span class="step" data-s="awaiting_approval">Your decision</span><span class="step" data-s="acting">Actions and re-check</span><span class="step" data-s="done">Done</span>
+    </div>
+    <p id="error" class="error" role="alert"></p>
+  </section>
+
+  <section id="summary" hidden aria-labelledby="h-summary">
+    <h2 id="h-summary">2. What the agent found</h2>
+    <div class="metrics" id="metrics"></div>
+  </section>
+
+  <section id="findings" hidden aria-labelledby="h-findings">
+    <h2 id="h-findings">3. Findings</h2>
+    <p class="muted">Defects and items for review come first. Each one shows the frames around it and the checks that led to the verdict.</p>
+    <table>
+      <thead><tr><th>Frames</th><th>Finding</th><th>Verdict</th><th>Why</th><th>Your decision</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <details id="dismissed-box"><summary id="dismissed-summary">Dismissed as intended material</summary>
+      <table><tbody id="dismissed-rows"></tbody></table></details>
+    <div class="row" style="margin-top:12px">
+      <button id="submit" disabled>Send decisions</button>
+      <span class="muted" id="decision-note">Approve a defect to unlock its action. Nothing changes until you send.</span>
+    </div>
+  </section>
+
+  <section id="actions" hidden aria-labelledby="h-actions">
+    <h2 id="h-actions">4. Actions and re-check</h2>
+    <div id="action-body"></div>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+let jobId = null, poller = null, latest = null;
+const ORDER = ["upload", "analyzing", "awaiting_approval", "acting", "done"];
+
+function setState(text, status) {
+  $("state").textContent = text;
+  const at = ORDER.indexOf(status === "queued" ? "analyzing" : status);
+  document.querySelectorAll(".step").forEach((el) => {
+    const i = ORDER.indexOf(el.dataset.s);
+    el.classList.toggle("done", at > i || status === "done");
+    el.classList.toggle("now", at === i && status !== "done");
+  });
+}
+
+function fail(message) { $("error").textContent = message; setState("error", "error"); $("run").disabled = !$("file").files.length; }
+
+$("file").addEventListener("change", () => { $("run").disabled = !$("file").files.length; });
+
+// A job link (?job=<id>) reopens an existing job, e.g. to review it later or from another machine.
+const linked = new URLSearchParams(location.search).get("job");
+if (linked && /^[0-9a-f]{32}$/.test(linked)) { jobId = linked; setState("loading job", "analyzing"); poll(); }
+
+$("run").addEventListener("click", async () => {
+  const file = $("file").files[0];
+  if (!file) return;
+  $("error").textContent = ""; $("run").disabled = true;
+  ["summary", "findings", "actions"].forEach((id) => ($(id).hidden = true));
+  setState("creating job", "upload");
+  try {
+    const created = await api("POST", "/api/jobs", { filename: file.name, size: file.size });
+    jobId = created.job_id;
+    history.replaceState(null, "", `?job=${jobId}`);
+    const form = new FormData();
+    Object.entries(created.upload.fields).forEach(([k, v]) => form.append(k, v));
+    form.append("file", file);
+    setState("uploading", "upload");
+    const up = await fetch(created.upload.url, { method: "POST", body: form });
+    if (!up.ok) throw new Error(`upload failed (${up.status})`);
+    await api("POST", `/api/jobs/${jobId}/start`, {});
+    setState("scanning", "analyzing");
+    poll();
+  } catch (e) { fail(e.message); }
+});
+
+async function api(method, path, body) {
+  const res = await fetch(path, { method, headers: { "content-type": "application/json" }, body: method === "GET" ? undefined : JSON.stringify(body) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || `${method} ${path} failed (${res.status})`);
+  return data;
+}
+
+function poll() {
+  clearInterval(poller);
+  poller = setInterval(async () => {
+    try {
+      const data = await api("GET", `/api/jobs/${jobId}`);
+      latest = data;
+      const status = data.job.status;
+      setState(status.replace("_", " "), status);
+      if (data.findings) render(data);
+      if (["awaiting_approval", "done", "failed", "expired"].includes(status)) {
+        clearInterval(poller);
+        $("run").disabled = !$("file").files.length;
+        if (status === "failed") fail(data.job.error || "The job stopped with an error.");
+        if (status === "expired") fail("Nobody decided within a day, so the job closed and the footage was not changed.");
+        if (status === "done") renderActions(data);
+      }
+    } catch (e) { clearInterval(poller); fail(e.message); }
+  }, 2000);
+}
+
+const fid = (f) => `${f.kind}:${f.start}-${f.end}`;
+const label = (kind) => kind.replace(/_/g, " ");
+
+function evidence(f, thumbs) {
+  const frames = [...new Set([f.start - 1, f.start, f.end, f.end + 1])].filter((i) => thumbs[i]);
+  if (!frames.length) return "";
+  const names = { [f.start - 1]: "before", [f.start]: "first", [f.end]: f.start === f.end ? "frame" : "last", [f.end + 1]: "after" };
+  return `<div class="thumbs">${frames.map((i) => `<figure><img src="${thumbs[i]}" alt="frame ${i} (${names[i]})" width="120"><figcaption>${i} ${names[i]}</figcaption></figure>`).join("")}</div>`;
+}
+
+// Measurements as short "name value" lines; numbers keep three decimals at most.
+function value(v) {
+  if (typeof v === "number") return Number.isInteger(v) ? String(v) : String(+v.toFixed(3));
+  if (typeof v === "boolean") return v ? "yes" : "no";
+  if (Array.isArray(v)) return v.map(value).join(v.length && typeof v[0] === "object" ? "; " : ", ");
+  if (v && typeof v === "object") return Object.entries(v).map(([k, x]) => `${k.replace(/_/g, " ")} ${value(x)}`).join(", ");
+  return String(v);
+}
+
+function measurements(result) {
+  return `<ul>${Object.entries(result).map(([k, v]) => `<li><b>${escapeHtml(k.replace(/_/g, " "))}</b> ${escapeHtml(value(v))}</li>`).join("")}</ul>`;
+}
+
+function traceFor(f, trace) {
+  const steps = trace.filter((s) => f.steps.includes(s.step));
+  if (!steps.length) return "";
+  return `<details><summary>How the agent decided (${steps.length} check${steps.length > 1 ? "s" : ""})</summary><ol class="trace">${steps.map((s) =>
+    `<li><code>${s.tool}</code> because ${escapeHtml(s.trigger)} &rarr; <i>${escapeHtml(s.decision)}</i>${measurements(s.result)}</li>`).join("")}</ol></details>`;
+}
+
+function escapeHtml(text) { return String(text).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+function render(data) {
+  const s = data.summary;
+  $("summary").hidden = false;
+  $("metrics").innerHTML = [
+    [s.defects, "defects"], [s.needs_review, "for your review"], [s.dismissed, "dismissed as intended"],
+    [s.frames_scanned, "frames scanned"], [s.ms_per_frame_first_pass + " ms", "per frame, first pass"], [s.tool_calls, "follow-up checks"],
+  ].map(([v, t]) => `<div class="metric"><b>${v}</b><span>${t}</span></div>`).join("");
+
+  const thumbs = (data.media && data.media.thumbs) || {};
+  const flagged = data.findings.filter((f) => f.verdict !== "dismissed").sort((a, b) => (a.verdict === "defect" ? 0 : 1) - (b.verdict === "defect" ? 0 : 1) || a.start - b.start);
+  const waiting = data.job.status === "awaiting_approval";
+  $("rows").innerHTML = flagged.length ? flagged.map((f) => {
+    const decided = f.approval === "approved" || f.approval === "rejected";
+    const control = f.approval === "pending" && waiting
+      ? `<div class="choice" role="radiogroup" aria-label="Decision for ${label(f.kind)} ${f.start}-${f.end}">
+           <label><input type="radio" name="${fid(f)}" value="approve"> Approve</label>
+           <label><input type="radio" name="${fid(f)}" value="reject"> Reject</label></div>
+         <div class="muted" style="font-size:13px">${escapeHtml(f.proposed_action || "")}</div>`
+      : decided ? `<span class="verdict v-approved">${f.approval}</span>` : `<span class="muted">${f.approval.replace("_", " ")}</span>`;
+    return `<tr><td class="frames">${f.start}&ndash;${f.end}</td><td>${label(f.kind)}${evidence(f, thumbs)}${traceFor(f, data.trace)}</td>
+      <td><span class="verdict v-${f.verdict}">${f.verdict.replace("_", " ")}</span><div class="muted" style="font-size:12px">confidence ${f.confidence.toFixed(2)}</div></td>
+      <td>${escapeHtml(f.reason)}</td><td>${control}</td></tr>`;
+  }).join("") : `<tr><td colspan="5" class="muted">No defects and nothing to review.</td></tr>`;
+
+  const dismissed = data.findings.filter((f) => f.verdict === "dismissed");
+  $("dismissed-summary").textContent = `Dismissed as intended material (${dismissed.length})`;
+  $("dismissed-rows").innerHTML = dismissed.map((f) => `<tr><td class="frames">${f.start}&ndash;${f.end}</td><td>${label(f.kind)}${traceFor(f, data.trace)}</td><td>${escapeHtml(f.reason)}</td></tr>`).join("");
+  $("findings").hidden = false;
+
+  $("submit").disabled = !waiting;
+  document.querySelectorAll('#rows input[type=radio]').forEach((r) => r.addEventListener("change", () => {
+    $("submit").disabled = !document.querySelector('#rows input[type=radio]:checked');
+  }));
+  $("submit").disabled = true;
+}
+
+$("submit").addEventListener("click", async () => {
+  const decisions = [...document.querySelectorAll('#rows input[type=radio]:checked')].map((r) => ({ finding: r.name, decision: r.value }));
+  if (!decisions.length) return;
+  $("submit").disabled = true;
+  try {
+    await api("POST", `/api/jobs/${jobId}/decisions`, { decisions, by: "reviewer" });
+    setState("applying approved actions", "acting");
+    poll();
+  } catch (e) { fail(e.message); }
+});
+
+// "black_frame:730-731" -> "black frame, frames 730–731"
+function rangeName(id) {
+  const [kind, span] = id.split(":");
+  const [a, b] = span.split("-");
+  return `${label(kind)}, ${a === b ? `frame ${a}` : `frames ${a}&ndash;${b}`}`;
+}
+
+function renderActions(data) {
+  const actions = data.job.actions;
+  if (!actions) return;
+  const v = actions.verification;
+  const parts = [];
+  const list = (ids) => `<ul>${ids.map((id) => `<li>${rangeName(escapeHtml(id))}</li>`).join("")}</ul>`;
+  if (actions.repaired_ranges && actions.repaired_ranges.length)
+    parts.push(`<p>Repaired in a preview copy by holding the nearest good frame of the same shot:</p>${list(actions.repaired_ranges)}`);
+  if (actions.rerender_ranges && actions.rerender_ranges.length)
+    parts.push(`<p>Sent to the re-render list (lost or held frames cannot be rebuilt from the export):</p>${list(actions.rerender_ranges)}`);
+  if (v) parts.push(v.clean
+    ? `<p><span class="verdict v-approved">re-check clean</span> The agent analysed the preview again; none of the repaired ranges is flagged.</p>`
+    : `<p><span class="verdict v-defect">re-check failed</span> Still flagged after repair:</p>${list(v.still_flagged)}`);
+  if (data.media && data.media.repair_preview) parts.push(`<video controls src="${data.media.repair_preview}" aria-label="Repair preview"></video>`);
+  if (!parts.length) parts.push(`<p class="muted">No action was approved, so the footage was left as it is.</p>`);
+  $("action-body").innerHTML = parts.join("");
+  $("actions").hidden = false;
+}
+</script>
+</body>
+</html>

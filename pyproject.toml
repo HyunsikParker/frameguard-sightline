@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frameguard-sightline"
+version = "0.1.0"
+description = "OpenCV 5 frame quality control with an agent loop and human approval"
+requires-python = ">=3.12"
+dependencies = ["opencv-python-headless==5.0.0.93", "numpy==2.4.6"]
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1", "boto3==1.43.114", "moto[dynamodb,s3]==5.2.4"]
+demo = ["playwright==1.62.0"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+# Vendored Lambda packages, demo renders and local data are not project code.
+extend-exclude = ["aws/build", "demo/build", "data", "jobs", "scripts"]  # scripts: August proposal tooling
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "SIM", "I"]
+
+[tool.setuptools]
+packages = ["sightline"]
+
+[tool.ruff.lint.per-file-ignores]
+# HTML and CSS templates for the demo slides keep their natural line lengths.
+"demo/make_slides.py" = ["E501"]

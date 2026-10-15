@@ -1,0 +1,57 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "LambdaLogsOwnGroupsOnly",
+      "Effect": "Allow",
+      "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+      "Resource": [
+        "arn:aws:logs:<REGION>:<ACCOUNT_ID>:log-group:/aws/lambda/sightline-analyzer",
+        "arn:aws:logs:<REGION>:<ACCOUNT_ID>:log-group:/aws/lambda/sightline-analyzer:*",
+        "arn:aws:logs:<REGION>:<ACCOUNT_ID>:log-group:/aws/lambda/sightline-api",
+        "arn:aws:logs:<REGION>:<ACCOUNT_ID>:log-group:/aws/lambda/sightline-api:*"
+      ]
+    },
+    {
+      "Sid": "JobBucketObjects",
+      "Effect": "Allow",
+      "Action": ["s3:GetObject", "s3:PutObject", "s3:AbortMultipartUpload"],
+      "Resource": "arn:aws:s3:::sightline-jobbucket-*/*"
+    },
+    {
+      "Sid": "JobBucketListing",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::sightline-jobbucket-*"
+    },
+    {
+      "Sid": "JobTableItems",
+      "Effect": "Allow",
+      "Action": ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem"],
+      "Resource": "arn:aws:dynamodb:<REGION>:<ACCOUNT_ID>:table/sightline-JobTable-*"
+    },
+    {
+      "Sid": "StartOwnWorkflow",
+      "Effect": "Allow",
+      "Action": "states:StartExecution",
+      "Resource": "arn:aws:states:<REGION>:<ACCOUNT_ID>:stateMachine:sightline-jobs"
+    },
+    {
+      "Sid": "ResumeWorkflowTaskTokensHaveNoResourceArn",
+      "Effect": "Allow",
+      "Action": ["states:SendTaskSuccess", "states:SendTaskFailure"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "InvokeOwnFunctions",
+      "Effect": "Allow",
+      "Action": "lambda:InvokeFunction",
+      "Resource": [
+        "arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:sightline-analyzer",
+        "arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:sightline-analyzer:*",
+        "arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:sightline-api",
+        "arn:aws:lambda:<REGION>:<ACCOUNT_ID>:function:sightline-api:*"
+      ]
+    }
+  ]
+}
